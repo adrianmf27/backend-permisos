@@ -1,6 +1,9 @@
 const express = require("express")
 const routerPermissions = express.Router()
 let permissions = require("../data/permissions")
+let authorizers = require("../data/authorizers")
+const authorizers = require("../data/authorizers")
+
 
 /* Para consultar información --> get
 Para agregar información --> post */
@@ -37,6 +40,30 @@ routerPermissions.post("/", (req, res) => {
 
     /* Se devuelve un obj json con el último elemento añadido */
     res.json({id: lastID + 1}) 
+})
+
+
+/* PUT --> modificar datos ya creados */
+routerPermissions.put("/:id/approbedBy", (req, res) => {
+    let permissionId = req.params.id
+    let authorizedEmail = req.body.authorizedEmail
+    let authorizedPassword = req.body.authorizedPassword
+
+    // validation
+    let authorizer = authorizers.find(a => a.authorizedEmail == authorizedEmail && 
+        a.authorizedPassword == authorizedPassword)
+    
+    if(authorizer == undefined){
+        return res.status(401).json({errors: "Not authorized"})
+    }
+
+    let permission = permissions.find( p => p.id == permissionId)
+    if(permission == undefined){
+        return res.status(400).json({errors: "No permissionId"})
+    }
+
+    permissions.approbedBy.push(permission.id)
+    res.json(permission)
 })
 
 
