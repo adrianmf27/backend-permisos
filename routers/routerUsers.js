@@ -6,7 +6,7 @@ routerUsers.get("/", (req, res) => {
     res.json(users.map(u => { return { id: u.id, email:u.email } } ))
 })
 
-routerPermissions.post("/", (req, res) => {
+routerUsers.post("/", (req, res) => {
     let text = req.body.text
     let userEmail = req.body.userEmail
     let userPassword = req.body.userPassword
@@ -30,7 +30,7 @@ routerPermissions.post("/", (req, res) => {
         return res.status(400).json({errors: errors})
     }
 
-    permissions.push({
+    users.push({
         id: lastID + 1, 
         text: text, 
         approbedBy: [], 

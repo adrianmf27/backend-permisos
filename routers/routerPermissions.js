@@ -67,4 +67,45 @@ routerPermissions.put("/:id/approbedBy", (req, res) => {
 })
 
 
+routerPermissions.put("/:id", (req, res) => {
+    let id = req.params.id
+    
+    if(permissionId == undefined){
+        return res.status(400).json({errors: "No ID found"})
+    }
+
+    let permission = permissions.find(p => p.id = permissionId.id)
+
+    if(permission == undefined){
+        return res.status(400).json({errors: "No permission with this id"})
+    }
+
+    let text = req.body.text
+
+    if(text != undefined){
+        permission.text = text
+    }
+
+    res.json(permission)
+})
+
+
+routerPermissions.delete("/", (req, res) => {
+    let permissionId = req.params.id
+    
+    if(permissionId == undefined){
+        return res.status(400).json({errors: "No ID found"})
+    }
+
+    let permission = permissions.find(p => p.id = permissionId.id)
+
+    if(permission == undefined){
+        return res.status(400).json({errors: "No permission with this id"})
+    }
+
+    permissions = permissions.filter(p => p.id != permissionId)
+
+    res.json({deleted : true})
+})
+
 module.exports = routerPermissions
