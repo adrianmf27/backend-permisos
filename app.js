@@ -7,6 +7,14 @@ let port = 8081
 /* Para poder recibir datos en forma json */
 app.use(express.json()) 
 
+
+/* Declaramos la carpeta public como static 
+--> Primer se mira si se puede resolver la app en public
+--> Luego se pasa la peticion al middleware si antes todo fue bien
+--> Si la peticion pasa el middelware se le pasa al router de permisos */
+app.use(express.static("public"))
+
+
 /* Para incluir los Middlewares execution 
 'next()' pasa la peticion al elemento del array en la que s eprocesa */
 app.use(["/permissions"], (req, res, next) => {
