@@ -1,13 +1,12 @@
 const express = require("express")
 const routerPermissions = express.Router()
 let permissions = require("../data/permissions")
-let authorizers = require("../data/authorizers")
-const authorizers = require("../data/authorizers")
 
+// Librería externa a node para crear y abrir tokens
+let jwt = require("jsonwebtoken")
 
 /* Para consultar información --> get
 Para agregar información --> post */
-
 
 routerPermissions.get("/", (req, res) => {
     res.json(permissions)
@@ -15,19 +14,8 @@ routerPermissions.get("/", (req, res) => {
 
 routerPermissions.post("/", (req, res) => {
     let text = req.body.text
-    let userId = req.body.userId
-    let lastID = permissions[permissions.length - 1].id
-    let errors = []
-
+    
     if(text == undefined){
-        errors.push("No text in the body")
-    }
-
-    if(userId == undefined){
-        errors.push("No userId in the body")
-    }
-
-    if(errors.length >= 1){
         return res.status(400).json({errors: errors})
     }
 
@@ -35,7 +23,7 @@ routerPermissions.post("/", (req, res) => {
         id: lastID + 1, 
         text: text, 
         approbedBy: [], 
-        userId: userId
+        userId: req.infoApiKey.id
     })
 
     /* Se devuelve un obj json con el último elemento añadido */
@@ -45,32 +33,21 @@ routerPermissions.post("/", (req, res) => {
 
 /* PUT --> modificar datos ya creados */
 routerPermissions.put("/:id/approbedBy", (req, res) => {
-    let permissionId = req.params.id
-    let authorizedEmail = req.body.authorizedEmail
-    let authorizedPassword = req.body.authorizedPassword
-
-    // validation
-    let authorizer = authorizers.find(a => a.authorizedEmail == authorizedEmail && 
-        a.authorizedPassword == authorizedPassword)
+    let user = users.find( u => u.id == req.infoApiKey.id)
     
-    if(authorizer == undefined){
-        return res.status(401).json({errors: "Not authorized"})
+    if (user.role != "admin"){
+        return res.status(401).json({error:"User not and admin"})
     }
 
-    let permission = permissions.find( p => p.id == permissionId)
-    if(permission == undefined){
-        return res.status(400).json({errors: "No permissionId"})
-    }
-
-    permissions.approbedBy.push(permission.id)
+    permissions.approbedBy.push(user.userID)
     res.json(permission)
 })
 
 
 routerPermissions.put("/:id", (req, res) => {
-    let id = req.params.id
+   let id = req.params.id
     
-    if(permissionId == undefined){
+    if(id == undefined){
         return res.status(400).json({errors: "No ID found"})
     }
 
@@ -97,14 +74,20 @@ routerPermissions.delete("/", (req, res) => {
         return res.status(400).json({errors: "No ID found"})
     }
 
-    let permission = permissions.find(p => p.id = permissionId.id)
+    let permission = permissions.find(
+        p => p.id = permissionId.id && p.userID)
 
     if(permission == undefined){
         return res.status(400).json({errors: "No permission with this id"})
     }
 
-    permissions = permissions.filter(p => p.id != permissionId)
+    let user = users.find(u => u.id = req.infoApiKey.id)
 
+    if(user.role == "user" && permission.userID != req.infoApiKey.id){
+        return res.status(401).json({errors: "You can not delete permission you did not create"})
+    }
+
+    permissions = permissions.filter(p => p.id != permissionId)
     res.json({deleted : true})
 })
 
